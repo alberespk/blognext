@@ -1,7 +1,8 @@
-const { Op } = require('../../../services/databank').Sequelize;
+import { sign } from '../../../services/jwt';
+
 const { User } = require('../../../services/databank').models;
 const { routeHandler } = require('../../../utils/routes');
-const { hash } = require('../../../services/bcrypt');
+const { compare } = require('../../../services/bcrypt');
 
 function verifyBody(body, keys = []) {
     body = Object.assign({}, body);
@@ -27,13 +28,8 @@ function verifyPass(pass) {
 }
 
 const routes = {
-    get: async (req, res) => {
-        const result = await User.findAll({});
-
-        res.status(200).send(result);
-    },
     post: async (req, res) => {
-        const body = verifyBody(req.body, ['name', 'mail', 'pass']);
+        const body = verifyBody(req.body, ['mail', 'pass']);
         
         if(!body) {
             return res.status(400).send('Faltando informações!');
@@ -41,33 +37,23 @@ const routes = {
 
         const user = await User.findOne({
             where: {
-                [Op.or]: [
-                    { name: body.name },
-                    { mail: body.mail }
-                ]
+                mail: body.mail 
             }
         });
 
-        if(user) {
-            return res.status(400).send('Usuário já existente!');
+        if(!user) {
+            return res.status(400).send('Usuário não existente!');
         }
 
-        if(!verifyMail(body.mail)) {
-            return res.status(400).send('Email inválido!');
+        if(!compare(body.pass, user.pass)) {
+            return res.status(400).send('Senha inválida!');
         }
 
-        if(!verifyPass(body.pass)) {
-            return res.status(400).send('A senha precisa ter 8 caracteres e ao menos 1 letra maiúscula, 1 letra minúscula e 1 número!');
-        }
+        const token = await sign({ userId: user.id }, process.env.JWT_SECRET, '1d');
 
-        const newUser = await User.create({ 
-            ...body,
-            pass: await hash(body.pass)
-        });
+        user.pass = undefined;
 
-        newUser.pass = undefined;
-
-        res.status(200).send(newUser);
+        res.status(200).send({ user, token });
     },
     any: async (req, res) => {
         res.status(404).send({});
