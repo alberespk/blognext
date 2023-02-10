@@ -22,9 +22,14 @@
     "jose": "^4.11.2",
     "mysql2": "^3.0.1",
     "next": "13.1.4",
+    "next-auth": "^4.19.2",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "sequelize": "^6.28.0",
     "styled-components": "^5.3.6"
+  },
+  "devDependencies": {
+    "@prisma/client": "^4.9.0",
+    "prisma": "^4.9.0"
   }
 }

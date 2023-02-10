@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// ID no mongodb
+// id String @id @default(auto()) @map("_id") @db.ObjectId
+
+enum ModalitiesEnum {
+  campo
+  quadra
+  society
+}
+
+enum PermissionEnum {
+  minimal
+  all
+}
+
+type NotificationContent {
+  title String
+  text  String
+  image String
+}
+
+type AddressData {
+  cep String
+  n   String
+}
+
+type Child {
+  name  String
+  birth DateTime
+}
+
+type FamilyData {
+  affilation String[]
+  partner    String?
+  children   Child[]
+}
+
+type PositionData {
+  first  String
+  second String?
+  third  String?
+}
+
+type SpotiveData {
+  modalities  ModalitiesEnum[]
+  positions   PositionData
+  observation String[]
+}
+
+type BloodPressureMeasurement {
+  results String[]
+  date    DateTime
+}
+
+type HealthData {
+  bpm      BloodPressureMeasurement
+  problems String[]
+}
+
+type Payment {
+  date DateTime
+  paid Boolean
+}
+
+type FinancialData {
+  register Payment
+  payments Payment[]
+}
+
+model User {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  name      String        @unique
+  nick      String?       @unique
+  birth     DateTime
+  cpf       String        @unique
+  rg        String?       @unique
+  password  String
+  email     String?       @unique
+  address   AddressData
+  family    FamilyData
+  sportive  SpotiveData
+  financial FinancialData
+  Admin     Admin[]
+}
+
+model Admin {
+  id         String         @id @default(auto()) @map("_id") @db.ObjectId
+  email      String         @unique
+  password   String
+  permission PermissionEnum
+  user       User?          @relation(fields: [userId], references: [id])
+  userId     String?        @db.ObjectId
+}
+
+model Gallery {
+  id         String         @id @default(auto()) @map("_id") @db.ObjectId
+  image      String 
+}
+
+model Notification {
+  id         String         @id @default(auto()) @map("_id") @db.ObjectId
+  // target     String[]
+  content    NotificationContent
+}
